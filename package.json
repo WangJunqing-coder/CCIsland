@@ -1,0 +1,22 @@
+{
+  "name": "ccisland",
+  "version": "1.0.0",
+  "description": "Claude Code 灵动岛 - 实时状态显示器",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "notify": "node hooks/notify.js",
+    "build": "electron-packager . CCIsland --platform=win32 --arch=x64 --out=dist --overwrite"
+  },
+  "keywords": [
+    "claude-code",
+    "dynamic-island",
+    "electron"
+  ],
+  "author": "CCIsland",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-packager": "^17.1.2"
+  }
+}

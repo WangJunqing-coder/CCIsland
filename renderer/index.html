@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCIsland</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 灵动岛容器 -->
+  <div id="island" class="island">
+    <!-- 紧凑态：始终可见 -->
+    <div class="island-compact">
+      <div class="status-dot"></div>
+      <svg class="cc-logo" viewBox="0 0 24 24" width="20" height="20">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="currentColor"/>
+      </svg>
+      <span class="status-text">就绪</span>
+    </div>
+    <!-- 展开态：悬停或有消息时显示 -->
+    <div class="island-expanded">
+      <div class="expanded-content">
+        <div class="expanded-header">
+          <div class="status-dot"></div>
+          <span class="expanded-title">Claude Code</span>
+        </div>
+        <div class="expanded-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── 状态配置 ─────────────────────────────────────
+    const STATUS_CONFIG = {
+      idle:      { label: '就绪',     color: '#8e8e93', icon: '💤', expandedTitle: 'Claude Code' },
+      running:   { label: '运行中',   color: '#007aff', icon: '⚡', expandedTitle: '正在执行...' },
+      waiting:   { label: '待确认',   color: '#ff9500', icon: '⚠️', expandedTitle: '需要你的确认' },
+      completed: { label: '已完成',   color: '#34c759', icon: '✅', expandedTitle: '任务完成' },
+      error:     { label: '错误',     color: '#ff3b30', icon: '❌', expandedTitle: '出现错误' },
+    };
+
+    let currentStatus = 'idle';
+    let expandTimer = null;
+    let collapseTimer = null;
+    let waitingBlinkTimer = null;
+
+    const island = document.getElementById('island');
+
+    // ─── 更新灵动岛状态 ───────────────────────────────
+    function updateStatus(status, message = '') {
+      const config = STATUS_CONFIG[status] || STATUS_CONFIG.idle;
+      currentStatus = status;
+
+      // 清除之前的定时器
+      clearTimeout(expandTimer);
+      clearTimeout(collapseTimer);
+      clearInterval(waitingBlinkTimer);
+
+      // 更新紧凑态
+      island.style.setProperty('--status-color', config.color);
+      island.querySelector('.status-text').textContent = config.icon + ' ' + config.label;
+
+      // 更新展开态
+      island.querySelector('.expanded-title').textContent = config.expandedTitle;
+      island.querySelector('.expanded-message').textContent = message || getDefaultMessage(status);
+
+      // 设置状态类名
+      island.className = 'island status-' + status;
+
+      // 状态变化时展开
+      expandIsland();
+
+      // waiting 状态闪烁效果
+      if (status === 'waiting') {
+        startWaitingBlink();
+        // waiting 状态不自动折叠
+        return;
+      }
+
+      // 非 waiting 状态，3 秒后自动折叠
+      collapseTimer = setTimeout(() => {
+        collapseIsland();
+      }, 3000);
+    }
+
+    function getDefaultMessage(status) {
+      const messages = {
+        idle: '等待 Claude Code 启动',
+        running: 'Claude Code 正在处理中...',
+        waiting: '有操作需要你的确认，请回到终端查看',
+        completed: '所有任务已完成',
+        error: '执行过程中出现错误',
+      };
+      return messages[status] || '';
+    }
+
+    // ─── 展开/折叠动画 ────────────────────────────────
+    function expandIsland() {
+      island.classList.add('expanded');
+      // 通过 IPC 通知主进程调整窗口大小
+      setTimeout(() => {
+        if (window.ccIsland) {
+          window.ccIsland.resizeWindow(360, 68);
+        }
+      }, 50);
+    }
+
+    function collapseIsland() {
+      if (currentStatus === 'waiting') return; // waiting 不折叠
+      island.classList.remove('expanded');
+      setTimeout(() => {
+        if (window.ccIsland) {
+          window.ccIsland.resizeWindow(200, 56);
+        }
+      }, 300);
+    }
+
+    // ─── waiting 闪烁效果 ─────────────────────────────
+    function startWaitingBlink() {
+      let visible = true;
+      waitingBlinkTimer = setInterval(() => {
+        visible = !visible;
+        island.style.opacity = visible ? '1' : '0.6';
+      }, 800);
+    }
+
+    // ─── 鼠标交互 ─────────────────────────────────────
+    island.addEventListener('mouseenter', () => {
+      expandIsland();
+    });
+
+    island.addEventListener('mouseleave', () => {
+      if (currentStatus !== 'waiting') {
+        collapseTimer = setTimeout(() => collapseIsland(), 1000);
+      }
+    });
+
+    // ─── 接收主进程状态更新 ────────────────────────────
+    if (window.ccIsland) {
+      window.ccIsland.onStatusUpdate(({ status, message }) => {
+        updateStatus(status, message);
+      });
+    }
+
+    // ─── 初始状态 ─────────────────────────────────────
+    updateStatus('idle');
+  </script>
+</body>
+</html>

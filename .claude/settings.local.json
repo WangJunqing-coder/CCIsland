@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(node node_modules/electron/install.js)",
+      "Bash(ELECTRON_MIRROR=\"https://npmmirror.com/mirrors/electron/\" node node_modules/electron/install.js)",
+      "Bash(npm start *)",
+      "Bash(curl -s http://127.0.0.1:31126/status)",
+      "Bash(node hooks/notify.js running \"正在执行测试...\")",
+      "Bash(node hooks/notify.js waiting \"需要确认: 是否继续执行?\")",
+      "Bash(node hooks/notify.js completed \"所有测试通过\")",
+      "Bash(node hooks/notify.js error \"编译失败\")",
+      "Bash(node hooks/notify.js idle)",
+      "Bash(curl *)",
+      "Bash(node hooks/notify.js running \"测试运行状态\")",
+      "Bash(node hooks/notify.js waiting \"需要确认: 是否继续?\")",
+      "Bash(tasklist)",
+      "Bash(taskkill //F //IM electron.exe)",
+      "Bash(node hooks/notify.js running \"测试中\")",
+      "Bash(npm run *)",
+      "Bash(node -e \"console.log\\(require\\('electron/package.json'\\).version\\)\")",
+      "Bash(./CCIsland.exe)",
+      "Bash(node hooks/notify.js running \"打包版测试\")",
+      "Bash(powershell -Command \"Compress-Archive -Path 'CCIsland-win32-x64' -DestinationPath 'CCIsland-v1.0.0-win64.zip' -Force\")",
+      "Bash(taskkill //F //IM CCIsland.exe)",
+      "Bash(npx electron-packager *)",
+      "Bash(node hooks/notify.js running \"测试中...\")",
+      "Bash(node hooks/notify.js completed \"任务完成\")",
+      "Bash(rm -rf \"C:\\\\Users\\\\21112\\\\Desktop\\\\111\\\\CCIsland\\\\dist\")"
+    ]
+  }
+}
